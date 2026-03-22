@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dodge Blocks</title>
+<style>
+body {
+  margin:0;
+  background:#0f172a;
+  color:white;
+  text-align:center;
+  font-family:sans-serif;
+}
+
+h1 { margin:10px; }
+
+canvas {
+background:#020617;
+display:block;
+margin:20px auto;
+border:2px solid #334155;
+}
+
+</style>
+</head>
+<body>
+
+<h1>Dodge Blocks</h1>
+<canvas id="game" width="350" height="500"></canvas>
+<h2 id="score">Score: 0</h2>
+<p>Use ← → or Touch</p>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let player = {
+  x:150,
+  y:460,
+  w:50,
+  h:20,
+  speed:6
+};
+
+let blocks = [];
+let score = 0;
+let gameOver = false;
+
+// Controls
+let left = false, right = false;
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowLeft") left=true;
+  if(e.key==="ArrowRight") right=true;
+});
+
+document.addEventListener("keyup", e=>{
+  if(e.key==="ArrowLeft") left=false;
+  if(e.key==="ArrowRight") right=false;
+});
+
+// Touch
+canvas.addEventListener("touchmove", e=>{
+  let rect = canvas.getBoundingClientRect();
+  let touchX = e.touches[0].clientX - rect.left;
+  player.x = touchX - player.w/2;
+});
+
+// Spawn blocks
+function spawnBlock(){
+  blocks.push({
+    x: Math.random()*300,
+    y: -20,
+    w:40,
+    h:40,
+    speed: 2 + score/200
+  });
+}
+
+// Game loop
+function update(){
+  if(gameOver) return;
+
+  ctx.clearRect(0,0,350,500);
+
+  // Move player
+  if(left) player.x -= player.speed;
+  if(right) player.x += player.speed;
+
+  // Boundaries
+  if(player.x < 0) player.x = 0;
+  if(player.x > 300) player.x = 300;
+
+  // Draw player
+  ctx.fillStyle = "#22c55e";
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+
+  // Blocks
+  blocks.forEach((b, i)=>{
+    b.y += b.speed;
+
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+
+    // Collision
+    if(
+      b.x < player.x + player.w &&
+      b.x + b.w > player.x &&
+      b.y < player.y + player.h &&
+      b.y + b.h > player.y
+    ){
+      gameOver = true;
+      document.getElementById("score").innerText = "GAME OVER | Score: " + score;
+    }
+
+    // Remove off screen
+    if(b.y > 500){
+      blocks.splice(i,1);
+      score++;
+    }
+  });
+
+  document.getElementById("score").innerText = "Score: " + score;
+
+  requestAnimationFrame(update);
+}
+
+// Spawn interval
+setInterval(()=>{
+  if(!gameOver) spawnBlock();
+}, 800);
+
+// Start
+update();
+</script>
+
+</body>
+</html>
